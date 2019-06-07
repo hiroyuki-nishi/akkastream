@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  EnvName:
+    Type: String
+  ContextName:
+    Type: String
+  Image:
+    Type: String
+  ClusterSuffix:
+    Type: String
+  ClusterName:
+    Type: String
+Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/ecs/lspan-spa-api-${ClusterSuffix}/ecs.log
+  Task:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub spa-api-${EnvName}
+      ContainerDefinitions:
+      - Name: lspan-spa
+        Environment:
+        - Name: envName
+          Value: !Ref EnvName
+        - Name: contextName
+          Value: !Ref ContextName
+        - Name: regionName
+          Value: !Ref AWS::Region
+        Image: !Ref Image
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group: !Ref LogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: ec2
+        Memory: 512
+        MemoryReservation: 512
+        PortMappings:
+        - ContainerPort: 8080
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Sub spa-api-service-${ClusterSuffix}
+      Role:
+        Fn::ImportValue: !Sub spa-ECSServiceRole-${EnvName}
+      TaskDefinition: !Ref Task
+      DesiredCount: 1
+      LoadBalancers:
+      - TargetGroupArn:
+          Fn::ImportValue: !Sub spa-an-ecstg-${EnvName}
+        ContainerPort: 8080
+        ContainerName: lspan-spa
+      Cluster: !Ref ClusterName

@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  EnvName:
+    Type: String
+Resources:
+  ECSServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub spa-ECSServiceRole-${EnvName}
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ecs.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: ecs-service
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action:
+            - 'elasticloadbalancing:DeregisterInstancesFromLoadBalancer'
+            - 'elasticloadbalancing:DeregisterTargets'
+            - 'elasticloadbalancing:Describe*'
+            - 'elasticloadbalancing:RegisterInstancesWithLoadBalancer'
+            - 'elasticloadbalancing:RegisterTargets'
+            - 'ec2:Describe*'
+            - 'ec2:AuthorizeSecurityGroupIngress'
+            Resource: '*'
+  ECSRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub spa-ECSRole-${EnvName}
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: ecs-service
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action:
+            - 'ecs:CreateCluster'
+            - 'ecs:DeregisterContainerInstance'
+            - 'ecs:DiscoverPollEndpoint'
+            - 'ecs:Poll'
+            - 'ecs:RegisterContainerInstance'
+            - 'ecs:StartTelemetrySession'
+            - 'ecs:Submit*'
+            - 'logs:CreateLogStream'
+            - 'logs:PutLogEvents'
+            - 'ecr:GetAuthorizationToken'
+            - 'ecr:BatchGetImage'
+            - 'ecr:GetDownloadUrlForLayer'
+            - 'sqs:*'
+            - 'dynamodb:*'
+            - 'ses:SendEmail'
+            - 's3:*'
+            - 'ssm:*'
+            - 'kinesis:PutRecord'
+            - 'kinesis:PutRecords'
+            - 'lambda:*'
+            - "cloudwatch:PutMetricData"
+            Resource: '*'
+  ECSInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+      - !Ref ECSRole
+Outputs:
+  ECSServiceRole:
+    Value: !Ref ECSServiceRole
+    Export:
+      Name: !Sub spa-ECSServiceRole-${EnvName}
+  ECSRole:
+    Value: !Ref ECSRole
+    Export:
+      Name: !Sub spa-ECSRole-${EnvName}
+  ECSInstanceProfile:
+    Value: !Ref ECSInstanceProfile
+    Export:
+      Name: !Sub spa-ECSInstanceProfile-${EnvName}

@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  ECRRepository1:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: "spa/lspan-spa-akka-service"
+      RepositoryPolicyText: |
+        {
+          "Version": "2008-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": [
+                  "arn:aws:iam::051470469442:root",
+                  "arn:aws:iam::468260865666:root",
+                  "arn:aws:iam::562671949206:root",
+                  "arn:aws:iam::781613947004:root"
+                ]
+              },
+              "Action": [
+                "ecr:*"
+              ]
+            }
+          ]
+        }

@@ -1,0 +1,9 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  EnvName:
+    Type: String
+Resources:
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub spa-api-cluster-${EnvName}

@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  EnvName:
+    Type: String
+    Default: it
+#  HostedZoneName: TODO -nishi ID指定ならいける？
+#    Type: String
+#  HostName:
+#    Type: String
+  Certificate:
+    Type: String
+Resources:
+  ECSALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub spa-${EnvName}-an-alb
+      Scheme: internet-facing
+      LoadBalancerAttributes:
+      - Key: idle_timeout.timeout_seconds
+        Value: '30'
+      Subnets:
+      - Fn::ImportValue: !Sub spa-${EnvName}-ECSSubnet1
+      - Fn::ImportValue: !Sub spa-${EnvName}-ECSSubnet2
+      SecurityGroups:
+      - Fn::ImportValue: !Sub spa-${EnvName}-ECSSecurityGroup
+      Tags:
+      - Key: Name
+        Value: !Sub spa-${EnvName}-alb
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+      - Type: forward
+        TargetGroupArn: !Ref ECSTG
+      LoadBalancerArn: !Ref ECSALB
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+      - CertificateArn: !Ref Certificate
+  ECSTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: ECSALB
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      Matcher:
+        HttpCode: 200-499
+      Name: !Sub spa-${EnvName}-an-ecstg
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub spa-${EnvName}-VPC
+#  DNSRecord:
+#    Type: AWS::Route53::RecordSet
+#    Properties:
+#      HostedZoneName: !Ref HostedZoneName
+#      Name: !Ref HostName
+#      Type: A
+#      AliasTarget:
+#        DNSName: !Join ['', [!GetAtt [ECSALB, DNSName]]]
+#        HostedZoneId: !Join ['', [!GetAtt [ECSALB, CanonicalHostedZoneID]]]
+Outputs:
+  ECSALB:
+    Value: !Ref ECSALB
+    Export:
+      Name: !Sub spa-${EnvName}-an-ecsalb
+  ECSTG:
+    Value: !Ref ECSTG
+    Export:
+      Name: !Sub spa-${EnvName}-an-ecstg
+  ALBListener:
+    Value: !Ref ALBListener
+    Export:
+      Name: !Sub spa-${EnvName}-an-alblistener

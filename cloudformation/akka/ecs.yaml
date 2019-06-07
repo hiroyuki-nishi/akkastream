@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  InstanceType:
+    Type: String
+  ImageId:
+    Type: String
+    Default: ami-084cb340923dc7101
+  DesiredCapacity:
+    Type: Number
+  EnvName:
+    Type: String
+Resources:
+  ECSSecurityGroupHTTPinbound:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Fn::ImportValue: !Sub spa-${EnvName}-ECSSecurityGroup
+      IpProtocol: tcp
+      FromPort: '80'
+      ToPort: '80'
+      SourceSecurityGroupId:
+        Fn::ImportValue: !Sub spa-${EnvName}-ECSSecurityGroup
+  ECSSecurityGroupHTTPSinbound:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Fn::ImportValue: !Sub spa-${EnvName}-ECSSecurityGroup
+      IpProtocol: tcp
+      FromPort: '443'
+      ToPort: '443'
+      CidrIp: '0.0.0.0/0'
+  ECSSecurityGroupALBports:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Fn::ImportValue: !Sub spa-${EnvName}-ECSSecurityGroup
+      IpProtocol: tcp
+      FromPort: '31000'
+      ToPort: '61000'
+      SourceSecurityGroupId:
+        Fn::ImportValue: !Sub spa-${EnvName}-ECSSecurityGroup
+  LaunchConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Ref 'ImageId'
+      SecurityGroups:
+      - Fn::ImportValue: !Sub spa-${EnvName}-ECSSecurityGroup
+      InstanceType: !Ref 'InstanceType'
+      IamInstanceProfile:
+        Fn::ImportValue: !Sub spa-ECSInstanceProfile-${EnvName}
+      AssociatePublicIpAddress: true
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          echo ECS_CLUSTER=spa-api-cluster-${EnvName} >> /etc/ecs/ecs.config
+          yum install -y aws-cfn-bootstrap
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --region ${AWS::Region}
+  ECSAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+      - Fn::ImportValue: !Sub spa-${EnvName}-ECSSubnet1
+      - Fn::ImportValue: !Sub spa-${EnvName}-ECSSubnet2
+      LaunchConfigurationName: !Ref 'LaunchConfiguration'
+      MinSize: 0
+      MaxSize: 1
+      DesiredCapacity: !Ref 'DesiredCapacity'
+      Tags:
+      - Key: Name
+        Value: !Sub 'lspan-spa-${EnvName}-ecs'
+        PropagateAtLaunch: true
+Outputs:
+  ECSAutoScalingGroup:
+    Value: !Ref 'ECSAutoScalingGroup'
+    Export:
+      Name: !Sub 'spa-${EnvName}-ecs-autoscalinggroup'

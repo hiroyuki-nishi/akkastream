@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  TableName:
+    Type: String
+    Default: company
+Resources:
+  Company:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      TableName: ${TableName}
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: name
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      GlobalSecondaryIndexes:
+        - IndexName: "name-index"
+          KeySchema:
+            - AttributeName: name
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+  WriteCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: 1
+      MinCapacity: 1
+      ResourceId: !Join
+        - /
+        - - table
+          - !Ref 'Company'
+      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+      ScalableDimension: dynamodb:table:WriteCapacityUnits
+      ServiceNamespace: dynamodb
+  WriteScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: 'write-scaling-policy'
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref WriteCapacityScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+  ReadCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: 100
+      MinCapacity: 1
+      ResourceId: !Join
+        - /
+        - - table
+          - !Ref 'Company'
+      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+      ScalableDimension: dynamodb:table:ReadCapacityUnits
+      ServiceNamespace: dynamodb
+  ReadScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: 'read-scaling-policy'
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref ReadCapacityScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization

@@ -1,0 +1,115 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  EnvName:
+    Type: String
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: "true"
+      EnableDnsSupport: "true"
+      Tags:
+      - Key: Name
+        Value: !Sub spa-${EnvName}-vpc
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: !Sub spa-${EnvName}-igw
+  InternetGatewayAttach:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId:
+        Ref: InternetGateway
+      VpcId: !Ref 'VPC'
+  InternetGatewaySubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.10.0/24
+      MapPublicIpOnLaunch: false
+      Tags:
+      - Key: Name
+        Value: !Sub spa-${EnvName}-igw-subnet
+      VpcId: !Ref 'VPC'
+  InternetGatewayRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+      - Key: Name
+        Value: spa-${EnvName}-igw-routetable
+      VpcId: !Ref 'VPC'
+  InternetGatewayRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref 'InternetGateway'
+      RouteTableId: !Ref 'InternetGatewayRouteTable'
+  InternetGatewaySubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref 'InternetGatewayRouteTable'
+      SubnetId: !Ref 'InternetGatewaySubnet'
+  ECSSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref 'VPC'
+      CidrBlock: 10.0.100.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone:
+        Fn::Select:
+        - 0
+        - Fn::GetAZs: !Ref AWS::Region
+      Tags:
+      - Key: Name
+        Value: !Sub spa-${EnvName}-subnet1
+  ECSSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref 'VPC'
+      CidrBlock: 10.0.101.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone:
+        Fn::Select:
+        - 1
+        - Fn::GetAZs: !Ref AWS::Region
+      Tags:
+      - Key: Name
+        Value: !Sub spa-${EnvName}-subnet2
+  ECSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ECS Security Group
+      VpcId: !Ref 'VPC'
+      Tags:
+      - Key: Name
+        Value: !Sub spa-${EnvName}-ecs-sg
+  ECSSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref 'InternetGatewayRouteTable'
+      SubnetId: !Ref 'ECSSubnet1'
+  ECSSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref 'InternetGatewayRouteTable'
+      SubnetId: !Ref 'ECSSubnet2'
+Outputs:
+  VPC:
+    Description: VPC.
+    Value: !Ref 'VPC'
+    Export:
+      Name: !Sub spa-${EnvName}-VPC
+  ECSSecurityGroup:
+    Value: !Ref 'ECSSecurityGroup'
+    Export:
+      Name: !Sub spa-${EnvName}-ECSSecurityGroup
+  ECSSubnet1:
+    Value: !Ref 'ECSSubnet1'
+    Export:
+      Name: !Sub spa-${EnvName}-ECSSubnet1
+  ECSSubnet2:
+    Value: !Ref 'ECSSubnet2'
+    Export:
+      Name: !Sub spa-${EnvName}-ECSSubnet2

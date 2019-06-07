@@ -1,0 +1,8 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Recipe event store.
+Resources:
+  Stream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      Name: lspan-spa-kinesis
+      ShardCount: 1

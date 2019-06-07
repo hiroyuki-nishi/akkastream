@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  EnvName:
+    Type: String
+Resources:
+  ECSTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /hello
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      Matcher:
+        HttpCode: 200
+      Name: !Sub spa-an-ecstg-${EnvName}
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub spa-${EnvName}-VPC
+  ALBListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+      - Type: forward
+        TargetGroupArn: !Ref ECSTG
+      Conditions:
+      - Field: path-pattern
+        Values:
+        - /*
+      ListenerArn:
+        Fn::ImportValue: !Sub spa-${EnvName}-an-alblistener
+      Priority: 1
+Outputs:
+  ECSTG:
+    Value: !Ref ECSTG
+    Export:
+      Name: !Sub spa-an-ecstg-${EnvName}

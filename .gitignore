@@ -1,0 +1,4 @@
+*.pyc
+.idea
+project/project/
+target

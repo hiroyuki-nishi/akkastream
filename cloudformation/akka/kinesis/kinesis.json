@@ -1,0 +1,4 @@
+{
+  "StreamName": "lspan-spa-kinesis",
+  "ShardCount": 1
+}
