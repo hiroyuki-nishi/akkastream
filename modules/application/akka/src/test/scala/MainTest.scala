@@ -22,7 +22,7 @@ class MainTest extends FunSuite {
     implicit val executionContext = system.dispatcher
   }
 
-  test("deadlockの再現: 1Lambdaあたりの実行時間が1~30sでスレッドプールが128, groupKeyをindexで分割") {
+  ignore("deadlockの再現: 1Lambdaあたりの実行時間が1~30sでスレッドプールが128, groupKeyをindexで分割") {
     // 100 * 7 = 700並列で動くのでスレッドが枯渇しdeadlockになる
     new Fixture with PartitionFlow {
       val dispatcherName = "blocking-io-dispatcher-invoke-lambda128"
@@ -52,6 +52,29 @@ class MainTest extends FunSuite {
         .repeat(Record())
 
       source.via(partitionFlow).runWith(Sink.ignore)
+    }
+  }
+
+  test("mapAsync") {
+    new Fixture {
+      val dispatcherName = "blocking-io-dispatcher-invoke-lambda1024"
+      lazy val source: Source[Record, NotUsed] = Source
+        .repeat(Record())
+
+      source
+        .mapAsync(2)(r =>
+          Future {
+            Thread.sleep(1000)
+            println("hoge")
+            r
+        })
+        .addAttributes(
+          Attributes.logLevels(onElement = Attributes.LogLevels.Info,
+                               onFinish = Attributes.LogLevels.Off))
+        .addAttributes(ActorAttributes.dispatcher("mapasync-dispatcher"))
+        .map(x => println(x))
+        .take(10)
+        .runForeach(println)
     }
   }
 }

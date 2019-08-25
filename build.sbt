@@ -14,7 +14,7 @@ lazy val commonSettings = Seq(
     "-feature"
   ),
   scalafmtOnCompile in ThisBuild := true,
-  )
+)
 
 lazy val contextName = "akkastream"
 val EnvName: String = sys.env.getOrElse("ENV_NAME", "it")
@@ -83,7 +83,7 @@ lazy val root = (project in file("."))
       val credential = AwsecrCredential(result)
       val loginCommand = docker :: "login" :: "-u" :: credential.user :: "-p" :: credential.password :: s"https://$domain" :: Nil
       val cmd = loginCommand.mkString(" ")
-      sys.process.Process(cmd)! match {
+      sys.process.Process(cmd) ! match {
         case 0 ⇒ cmd
         case _ ⇒ sys.error(s"Login failed. Command: $cmd")
       }
@@ -102,6 +102,7 @@ lazy val root = (project in file("."))
         AwsecrCommands.push(docker, target)
         ()
       }
+
       pushAppHttp
     }
   )
@@ -115,29 +116,29 @@ lazy val appHttp = (project in file("./modules/application/http")).
     libraryDependencies ++= ScalaTest ++ awsSqs
   ).
   settings(
-  name := "lspan-application-http",
-  libraryDependencies ++= appHttpDeps,
-  mainClass in Compile := Some("MainServer"),
-  version in Docker := "1.0.0",
-  dockerBaseImage := "java:openjdk-8-jdk",
-  dockerExposedPorts := Seq(8080)
-)
+    name := "lspan-application-http",
+    libraryDependencies ++= appHttpDeps,
+    mainClass in Compile := Some("MainServer"),
+    version in Docker := "1.0.0",
+    dockerBaseImage := "java:openjdk-8-jdk",
+    dockerExposedPorts := Seq(8080)
+  )
 
 lazy val akka = (project in file("./modules/application/akka")).
   enablePlugins(JavaAppPackaging, AshScriptPlugin, DockerPlugin).
   dependsOn(domain, infraDynamoDB).
   settings(commonSettings: _*).
   settings(
-    libraryDependencies ++= ScalaTest ++ awsSqs ++ akkaAlpakkaSqs ++ appHttpDeps
-    ++ infraAkkaStremConfigDeps ++ akkaStreamTestKit
+    libraryDependencies ++= ScalaTest ++ awsSqs ++ akkaAlpakkaSqs ++ appHttpDeps ++ awsSts
+      ++ infraAkkaStremConfigDeps ++ akkaStreamTestKit ++ kantanCsvGeneric ++ betterFiles
   ).
   settings(
-  name := "lspan-akka",
-  mainClass in Compile := Some("company.Main"),
-  version in Docker := "1.0.0",
-  dockerBaseImage := "java:openjdk-8-jdk",
-  dockerExposedPorts := Seq(8080)
-)
+    name := "lspan-akka",
+    mainClass in Compile := Some("company.Main"),
+    version in Docker := "1.0.0",
+    dockerBaseImage := "java:openjdk-8-jdk",
+    dockerExposedPorts := Seq(8080)
+  )
 
 lazy val infraSQS = (project in file("./modules/adapter/infrastructure/sqs")).
   dependsOn().
@@ -155,7 +156,7 @@ lazy val infraDynamoDB = (project in file("./modules/adapter/infrastructure/dyna
     libraryDependencies ++= ScalaTest ++ awsDynamoDB ++ sprayJson
   )
 
-lazy val infraKinesis= (project in file("./modules/adapter/infrastructure/kinesis")).
+lazy val infraKinesis = (project in file("./modules/adapter/infrastructure/kinesis")).
   dependsOn(domain).
   settings(commonSettings: _*).
   settings(

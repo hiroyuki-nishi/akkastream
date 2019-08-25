@@ -1,6 +1,11 @@
 import akka.{Done, NotUsed}
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, OverflowStrategy, QueueOfferResult, ThrottleMode}
+import akka.stream.{
+  ActorMaterializer,
+  OverflowStrategy,
+  QueueOfferResult,
+  ThrottleMode
+}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import org.scalatest.FunSuite
 
@@ -29,14 +34,17 @@ class QueueFlowTest extends FunSuite {
       val source = Source(1 to 10)
 
       implicit val ec = system.dispatcher
-      source.mapAsync(1)(x => {
-        queue.offer(x).map {
-          case QueueOfferResult.Enqueued => println(s"enqueued $x")
-          case QueueOfferResult.Dropped => println(s"dropped $x")
-          case QueueOfferResult.Failure(ex) => println(s"Offer failed ${ex.getMessage}")
-          case QueueOfferResult.QueueClosed => println("Sourcer Queue closed")
-        }
-      }).runWith(Sink.ignore)
+      source
+        .mapAsync(1)(x => {
+          queue.offer(x).map {
+            case QueueOfferResult.Enqueued => println(s"enqueued $x")
+            case QueueOfferResult.Dropped  => println(s"dropped $x")
+            case QueueOfferResult.Failure(ex) =>
+              println(s"Offer failed ${ex.getMessage}")
+            case QueueOfferResult.QueueClosed => println("Sourcer Queue closed")
+          }
+        })
+        .runWith(Sink.ignore)
     }
   }
 

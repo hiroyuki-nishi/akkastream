@@ -13,8 +13,12 @@ object Dependencies {
   val awsSqs = Seq("com.amazonaws" % "aws-java-sdk-sqs" % awsSDKVersion)
   val awsDynamoDB = Seq("com.amazonaws" % "aws-java-sdk-dynamodb" % awsSDKVersion)
   val awsKinesis = Seq("com.amazonaws" % "aws-java-sdk-kinesis" % awsSDKVersion)
+  val awsSts = Seq("com.amazonaws" % "aws-java-sdk-sts" % awsSDKVersion)
 
   val sprayJson = Seq("io.spray" %%  "spray-json" % "1.3.5")
+
+  val kantanCsvGeneric = Seq("com.nrinaudo" %% "kantan.csv-generic" % "0.5.1")
+  val betterFiles = Seq("com.github.pathikrit" %% "better-files" % "3.4.0")
 
   val appHttpDeps = Seq(
     akkaHttp,
