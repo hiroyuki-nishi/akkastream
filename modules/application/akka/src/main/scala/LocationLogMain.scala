@@ -125,14 +125,14 @@ object LocationLogMain extends App with AmazonS3BucketWrapper {
       val stream = scala.io.Source.fromInputStream(s3, "UTF-8")
       Source.fromIterator(() => stream.getLines())
         .via(convertLogFlow)
-//        .log(name = "convertLogFlow")
-//        .addAttributes(
-//          Attributes.logLevels(onElement = Attributes.LogLevels.Info,
-//            onFinish = Attributes.LogLevels.Off))
+      //        .log(name = "convertLogFlow")
+      //        .addAttributes(
+      //          Attributes.logLevels(onElement = Attributes.LogLevels.Info,
+      //            onFinish = Attributes.LogLevels.Off))
       // TODO -nishi Zipファイル作成
     }
 
-  val getS3Flow: Flow[String, Log, NotUsed] =
+  val getS3Flow: Flow[String, S3ObjectInputStream, NotUsed] =
     Flow[String].flatMapConcat { path =>
       println(s"START s3Flow object path: ${path}")
       Source.single(path)
@@ -143,11 +143,6 @@ object LocationLogMain extends App with AmazonS3BucketWrapper {
               s => s
             )
         })
-        .via(writeCsvFlow)
-        .log(name = "writeCsvFlow")
-        .addAttributes(
-          Attributes.logLevels(onElement = Attributes.LogLevels.Info,
-            onFinish = Attributes.LogLevels.Off))
     }
 
   def executeFlow: Flow[List[String], Unit, NotUsed] =
@@ -160,6 +155,8 @@ object LocationLogMain extends App with AmazonS3BucketWrapper {
           .groupBy(executions.size, a => a._2 % executions.size)
           .map(_._1)
           .via(getS3Flow)
+          .via(writeCsvFlow)
+          .map(x => println("実行"))
           .async
           .mergeSubstreams
           .addAttributes(ActorAttributes.dispatcher(
@@ -167,9 +164,9 @@ object LocationLogMain extends App with AmazonS3BucketWrapper {
           .map(_ => ())
       }
 
+  //  Source.single(Seq("hoge1.csv", "hoge2.csv").toList)
   Source.single(Seq("hoge1.csv").toList)
-//  Source.single(Seq("hoge1.csv", "hoge2.csv").toList)
-    //  execute(Seq("hoge1.csv", "hoge2.csv").toList)
+    //    execute(Seq("hoge1.csv", "hoge2.csv").toList)
     .via(executeFlow)
     .log(name = "END Flow")
     .addAttributes(Attributes.logLevels(onElement = Attributes.LogLevels.Info,
@@ -186,4 +183,32 @@ object LocationLogMain extends App with AmazonS3BucketWrapper {
         sys.exit()
       }
     }
+  //  val hogeFlow: Flow[String, String, NotUsed] =
+  //  Flow[String].map { path =>
+  //    println("aaaaaa")
+  //    path
+  //  }
+  //
+  //  val fugaFlow: Flow[String, String, NotUsed] =
+  //    Flow[String].map { path =>
+  //      println("fuga")
+  //      path
+  //    }
+  //
+  //  RunnableGraph
+  //    .fromGraph(GraphDSL.create(Sink.ignore) { implicit builder =>
+  //      sink =>
+  //        import akka.stream.scaladsl.GraphDSL.Implicits._
+  //        val source: Source[String, NotUsed] =
+  //          Source.single("hoge1.csv")
+  //
+  //        val broadcast = builder.add(Broadcast[String](2))
+  //        val merge = builder.add(Merge[String](2))
+  //
+  //        source ~> broadcast ~> getS3Flow ~> writeCsvFlow ~> hogeFlow ~> merge ~> fugaFlow ~> sink
+  //                  broadcast ~> merge
+  //        ClosedShape
+  //    })
+  //    .run()
+  //    .foreach(print)
 }
