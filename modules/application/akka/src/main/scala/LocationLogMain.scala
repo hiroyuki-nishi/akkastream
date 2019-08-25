@@ -120,16 +120,19 @@ object LocationLogMain extends App with AmazonS3BucketWrapper {
     }
 
 
-  def writeCsvFlow: Flow[S3ObjectInputStream, Log, NotUsed] =
+  def writeCsvFlow: Flow[S3ObjectInputStream, Int, NotUsed] =
     Flow[S3ObjectInputStream].flatMapConcat { s3 =>
       val stream = scala.io.Source.fromInputStream(s3, "UTF-8")
       Source.fromIterator(() => stream.getLines())
+//        .groupBy(1, a => Math.abs(a.## % 1))
         .via(convertLogFlow)
-      //        .log(name = "convertLogFlow")
-      //        .addAttributes(
-      //          Attributes.logLevels(onElement = Attributes.LogLevels.Info,
-      //            onFinish = Attributes.LogLevels.Off))
-      // TODO -nishi Zipファイル作成
+        // TODO -nishi Logをcsvファイルに書く
+        .log(name = "convertLogFlow")
+        .addAttributes(
+          Attributes.logLevels(onElement = Attributes.LogLevels.Info,
+            onFinish = Attributes.LogLevels.Off))
+//        .mergeSubstreams
+        .fold(0)((_, _) => 1)
     }
 
   val getS3Flow: Flow[String, S3ObjectInputStream, NotUsed] =
@@ -156,16 +159,17 @@ object LocationLogMain extends App with AmazonS3BucketWrapper {
           .map(_._1)
           .via(getS3Flow)
           .via(writeCsvFlow)
-          .map(x => println("実行"))
+          // TODO -nishi ReadmeとZipファイル作成
+//          .via(createReadme)
+//          .via(createZip)
           .async
           .mergeSubstreams
-          .addAttributes(ActorAttributes.dispatcher(
-            "blocking-io-dispatcher-partitionkey-status"))
+          .addAttributes(ActorAttributes.dispatcher("blocking-io-dispatcher-s3"))
           .map(_ => ())
       }
 
-  //  Source.single(Seq("hoge1.csv", "hoge2.csv").toList)
-  Source.single(Seq("hoge1.csv").toList)
+    Source.single(Seq("hoge1.csv", "hoge2.csv").toList)
+//  Source.single(Seq("hoge1.csv").toList)
     //    execute(Seq("hoge1.csv", "hoge2.csv").toList)
     .via(executeFlow)
     .log(name = "END Flow")
@@ -183,32 +187,4 @@ object LocationLogMain extends App with AmazonS3BucketWrapper {
         sys.exit()
       }
     }
-  //  val hogeFlow: Flow[String, String, NotUsed] =
-  //  Flow[String].map { path =>
-  //    println("aaaaaa")
-  //    path
-  //  }
-  //
-  //  val fugaFlow: Flow[String, String, NotUsed] =
-  //    Flow[String].map { path =>
-  //      println("fuga")
-  //      path
-  //    }
-  //
-  //  RunnableGraph
-  //    .fromGraph(GraphDSL.create(Sink.ignore) { implicit builder =>
-  //      sink =>
-  //        import akka.stream.scaladsl.GraphDSL.Implicits._
-  //        val source: Source[String, NotUsed] =
-  //          Source.single("hoge1.csv")
-  //
-  //        val broadcast = builder.add(Broadcast[String](2))
-  //        val merge = builder.add(Merge[String](2))
-  //
-  //        source ~> broadcast ~> getS3Flow ~> writeCsvFlow ~> hogeFlow ~> merge ~> fugaFlow ~> sink
-  //                  broadcast ~> merge
-  //        ClosedShape
-  //    })
-  //    .run()
-  //    .foreach(print)
 }
