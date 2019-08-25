@@ -19,6 +19,7 @@ object Dependencies {
 
   val kantanCsvGeneric = Seq("com.nrinaudo" %% "kantan.csv-generic" % "0.5.1")
   val betterFiles = Seq("com.github.pathikrit" %% "better-files" % "3.4.0")
+  val openCsv = Seq("com.opencsv" % "opencsv" % "3.7")
 
   val appHttpDeps = Seq(
     akkaHttp,

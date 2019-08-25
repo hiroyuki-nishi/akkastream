@@ -130,7 +130,7 @@ lazy val akka = (project in file("./modules/application/akka")).
   settings(commonSettings: _*).
   settings(
     libraryDependencies ++= ScalaTest ++ awsSqs ++ akkaAlpakkaSqs ++ appHttpDeps ++ awsSts
-      ++ infraAkkaStremConfigDeps ++ akkaStreamTestKit ++ kantanCsvGeneric ++ betterFiles
+      ++ infraAkkaStremConfigDeps ++ akkaStreamTestKit ++ kantanCsvGeneric ++ betterFiles ++ openCsv
   ).
   settings(
     name := "lspan-akka",
