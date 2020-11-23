@@ -8,7 +8,7 @@ import jp.pigumer.sbt.cloud.aws.ecr.{AwsecrCommands, AwsecrCredential}
 
 lazy val commonSettings = Seq(
   organization := "nishi",
-  scalaVersion := "2.12.8",
+  scalaVersion := "2.13.3",
   scalacOptions := Seq(
     "-deprecation",
     "-feature"
