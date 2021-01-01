@@ -9,9 +9,9 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
 import company.{DynamoDBFlow, GraphType}
 import domain.company.{Company, CompanyId, CompanyName, CompanyRepository}
 import dynamodb.company.CompanyRepositoryOnDynamoDB
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class DynamoDBFlowTest extends FunSuite with GraphType with DynamoDBFlow {
+class DynamoDBFlowTest extends AnyFunSuite with GraphType with DynamoDBFlow {
 
   trait Fixture {
     implicit val system = ActorSystem("test-stream")

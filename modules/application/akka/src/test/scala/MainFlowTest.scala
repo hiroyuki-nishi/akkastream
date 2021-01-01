@@ -9,17 +9,14 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import company.MainFlow
 import domain.company.CompanyRepository
 import dynamodb.company.CompanyRepositoryOnDynamoDB
-import org.scalatest.FunSuite
-import software.amazon.awssdk.auth.credentials.{
-  AwsBasicCredentials,
-  StaticCredentialsProvider
-}
+import org.scalatest.funsuite.AnyFunSuite
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 
 import scala.concurrent.ExecutionContext
 
-class MainFlowTest extends FunSuite with MainFlow {
+class MainFlowTest extends AnyFunSuite with MainFlow {
   implicit private val system: ActorSystem = ActorSystem()
   implicit private val executionContext: ExecutionContext = system.dispatcher
   implicit private val materializer: ActorMaterializer = ActorMaterializer()

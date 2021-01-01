@@ -21,8 +21,8 @@ case class Record()
 
 object Main extends App with PartitionFlow {
   implicit val system = ActorSystem("ActorSystem")
-  implicit val materializer = ActorMaterializer()
-  implicit val executionContext = system.dispatcher
+//  implicit val materializer = ActorMaterializer()
+//  implicit val executionContext = system.dispatcher
   val dispatcherName = "blocking-io-dispatcher-invoke-lambda1024"
 
   lazy val source: Source[Record, NotUsed] = Source

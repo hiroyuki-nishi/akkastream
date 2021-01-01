@@ -1,20 +1,14 @@
 import akka.actor.ActorSystem
 import akka.stream.scaladsl._
 import akka.stream.testkit.scaladsl._
-import akka.stream.{
-  ActorAttributes,
-  ActorMaterializer,
-  ActorMaterializerSettings,
-  Attributes,
-  Supervision
-}
+import akka.stream.{ActorAttributes, ActorMaterializer, ActorMaterializerSettings, Attributes, Supervision}
 import akka.{Done, NotUsed}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.concurrent.Future
 import scala.util.Random
 
-class MainTest extends FunSuite {
+class MainTest extends AnyFunSuite {
 
   trait Fixture {
     implicit val system = ActorSystem("ActorSystem")

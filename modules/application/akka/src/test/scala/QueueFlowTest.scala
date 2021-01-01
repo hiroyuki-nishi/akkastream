@@ -2,12 +2,12 @@ import akka.{Done, NotUsed}
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, OverflowStrategy, QueueOfferResult, ThrottleMode}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.concurrent.duration._
 import scala.concurrent.{Future, duration}
 
-class QueueFlowTest extends FunSuite {
+class QueueFlowTest extends AnyFunSuite {
 
   trait Fixture {
     implicit val system = ActorSystem("ActorSystem")
